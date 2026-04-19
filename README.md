@@ -1,70 +1,84 @@
-# Getting Started with Create React App
+# Rewago Dynamic Storefront + Admin
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project now includes:
+- React Router based routes (`/`, `/login`, `/signup`, `/admin`)
+- Firebase Realtime Database integration for all visible homepage data
+- Firebase Authentication (signup/login/logout)
+- Admin route to manage hero + dynamic sections and full JSON
 
-## Available Scripts
+## 1) Setup
 
-In the project directory, you can run:
+1. Copy `.env.example` to `.env`.
+2. Put your Firebase web app keys in `.env`.
+3. Keep database URL as:
+   - `https://mantrickweb-default-rtdb.firebaseio.com/`
+4. Install and run:
+   - `npm install`
+   - `npm start`
 
-### `npm start`
+## 2) Firebase Authentication
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+In Firebase Console:
+1. Open **Authentication**.
+2. Enable **Email/Password** sign-in method.
+3. Use `/signup` to create users.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 3) Make Admin User
 
-### `npm test`
+By default every signup user gets role `user`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+To make admin:
+1. Open Realtime Database.
+2. Find `users/<uid>/role`.
+3. Change value to `admin`.
+4. Login again and open `/admin`.
 
-### `npm run build`
+## 4) Data Structure in Realtime Database
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Main node used by app:
+- `siteData`
+  - `menu`
+  - `hero`
+  - `sections.trending`
+  - `sections.brands`
+  - `sections.faq`
+  - `sellerBanner`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Admin page lets you:
+- update hero section
+- add items into trending/brands/faq
+- edit full JSON for all sections
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 5) Free Image Hosting (recommended)
 
-### `npm run eject`
+Use any free image CDN and store URL inside Realtime DB:
+- [Cloudinary](https://cloudinary.com/) (free tier, transformations, stable CDN URL)
+- [ImageKit](https://imagekit.io/) (free tier, optimization)
+- [ImgBB](https://imgbb.com/) (very simple upload + direct URL)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Process
+1. Upload image to one of the above platforms.
+2. Copy final image URL (should end with image path or include secure CDN URL).
+3. Paste URL in admin form (`Image URL`) or JSON editor.
+4. Save; homepage updates from Realtime DB.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 6) Security Rules (starter)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Use rules similar to this and tighten later:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```json
+{
+  "rules": {
+    "siteData": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
+```
